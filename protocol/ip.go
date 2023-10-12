@@ -44,7 +44,9 @@ func NewIPv4() *IPv4 {
 }
 
 func (i *IPv4) Len() (n uint16) {
-	i.IHL = 5
+	if i.IHL < 5 {
+		i.IHL = 5
+	}
 	if i.Data != nil {
 		return uint16(i.IHL*4) + i.Data.Len()
 	}
@@ -133,9 +135,11 @@ func (i *IPv4) UnmarshalBinary(data []byte) error {
 	n += 1
 	i.Checksum = binary.BigEndian.Uint16(data[n:])
 	n += 2
-	i.NWSrc = data[n : n+4]
+	i.NWSrc = make([]byte, 4)
+	copy(i.NWSrc, data[n:n+4])
 	n += 4
-	i.NWDst = data[n : n+4]
+	i.NWDst = make([]byte, 4)
+	copy(i.NWDst, data[n:n+4])
 	n += 4
 
 	err := i.Options.UnmarshalBinary(data[n:int(i.IHL*4)])
